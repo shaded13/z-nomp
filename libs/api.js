@@ -102,11 +102,12 @@ module.exports = function (logger, portalConfig, poolConfigs) {
         return;
       case 'workers_final':
         portalStats.getWorkerFinalShares(function (statWorkerFinal) {
-          res.writeHead(200, {
-            'Content-Type': 'application/json',
-            'Cache-Control': 'max-age=20',
-            'Connection': 'keep-alive'
-          });
+          res.header('Content-Type', 'application/json');
+          // res.writeHead(200, {
+          //   'Content-Type': 'application/json',
+          //   'Cache-Control': 'max-age=20',
+          //   'Connection': 'keep-alive'
+          // });
           res.end(JSON.stringify(statWorkerFinal));
         });
 
