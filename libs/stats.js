@@ -134,6 +134,18 @@ module.exports = function (logger, portalConfig, poolConfigs) {
       });
     });
   }
+  this.getWorkersKeepaliveByAddress = function (address, cback) {
+    var client = redisClients[0].client;
+    client.hgetall('WorkersKeepalive:' + address, function (error, data) {
+      if (error) {
+        logger.log('error:-' + error);
+        cback('');
+        return;
+      }
+      cback(data);
+    });
+  };
+
   this.getWorkerFinalShares = function (cback) {
     for (var pool in _this.stats.pools) {
       for (var w in _this.stats.pools[pool].workers) {
@@ -175,10 +187,9 @@ module.exports = function (logger, portalConfig, poolConfigs) {
         }
       }
       logger.error(logSystem, 'RedisError',
-        'Getting workersFinal: '+JSON.stringify(_this.statWorkerFinal));
+        'Getting workersFinal: ' + JSON.stringify(_this.statWorkerFinal));
       cback(_this.statWorkerFinal);
     });
-
   };
   function getWorkerStats (address) {
     address = address.split('.')[0];
