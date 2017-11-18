@@ -178,7 +178,7 @@ module.exports = function (logger, portalConfig, poolConfigs) {
         'Getting workersFinal: '+JSON.stringify(_this.statWorkerFinal));
       cback(_this.statWorkerFinal);
     });
-    cback(_this.statWorkerFinal);
+
   };
   function getWorkerStats (address) {
     address = address.split('.')[0];
