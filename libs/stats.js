@@ -64,6 +64,10 @@ module.exports = function (logger, portalConfig, poolConfigs) {
   this.stats = {};
   this.statsString = '';
 
+  this.statWorkerFinal = {
+    worker: {}
+  };
+
   setupStatsRedis();
   gatherStatHistory();
 
@@ -130,64 +134,50 @@ module.exports = function (logger, portalConfig, poolConfigs) {
       });
     });
   }
-  this. getWorkerFinalShares = function (cback) {
-    // redisStats.hkeys(['statHistory', retentionTime, '+inf'], function(err, replies){
-    //     if (err) {
-    //         logger.error(logSystem, 'Historics', 'Error when trying to grab historical stats ' + JSON.stringify(err));
-    //         return;
-    //     }
-    //});
-    //logger.error(logSystem, 'Historics', 'setWorkerBegin'  + JSON.stringify(_this.statWorkerFinal.worker));
-
-
-
-    //HERE WE ASSUME THAT THERE IS ONLY ONE ALGO FOR ONE WORKER
-    for (var iteroutworker in _this.statWorkerFinal.worker) {
-
-      (function(iterworker) {
-        // logger.error(logSystem, 'Historics', 'iterworker: ' + JSON.stringify(
-        //   iterworker));
-        //for (var outalgo in _this.statWorkerFinal.worker[iterworker].algos){
-        outalgo = _this.statWorkerFinal.worker[iterworker].algos;
-        (function(algo) {
-          // logger.error(logSystem, 'Historics', 'algo: ' + algo);
-          redisStats.hget(_this.statWorkerFinal.worker[iterworker].pool_name +
-            ":PermanentWorker:validShares", iterworker,
-            function(err, replies) {
-              if (err) {
-                logger.error(logSystem, 'Historics',
-                  'Error when trying to grab worker shares ' + JSON.stringify(
-                    err));
-                return;
-              }
-              // logger.error(logSystem, 'Historics',
-              //   'validShres received' + iterworker + " algo: " + algo
-              // );
-              _this.statWorkerFinal.worker[iterworker].validShares =
-                replies;
-
-
-            });
-
-          redisStats.hget(_this.statWorkerFinal.worker[iterworker].pool_name +
-            ":PermanentWorker:invalidShares", iterworker,
-            function(err, replies) {
-              if (err) {
-                logger.error(logSystem, 'Historics',
-                  'Error when trying to grab worker shares ' + JSON.stringify(
-                    err));
-                return;
-              }
-              _this.statWorkerFinal.worker[iterworker].invalidShares =
-                replies;
-            });
-        })(outalgo);
-        //}
-      })(iteroutworker);
-
+  this.getWorkerFinalShares = function (cback) {
+    for (var pool in _this.stats.pools) {
+      for (var w in _this.stats.pools[pool].workers) {
+        minerName = w.split('.')[1];
+        _this.statWorkerFinal.worker[minerName] = {
+          miner: _this.stats.pools[pool].workers[w].miner,
+          hashrate: _this.stats.pools[pool].workers[w].hashrate,
+          algos: _this.stats.pools[pool].algorithm,
+          pool_name: pool,
+          //  validShares: stats.pools[pool].workers[worker].shares,
+          //    invalidShares: stats.pools[pool].workers[worker].invalidshares,
+          wallet: w.split('.')[0]
+        };
+      }
     }
-    cback(_this.statWorkerFinal)
-  }
+    //  получить шары из редиса
+    var redisGetSharesCommand = [];
+    var poolCounter = 0;
+    for (var pool in _this.stats.pools) {
+      redisGetSharesCommand.push(['hgetall', pool + ':PermanentWorker:validShares']);
+      redisGetSharesCommand.push(['hgetall', pool + ':PermanentWorker:invalidShares']);
+      poolCounter += 1;
+    }
+    redisStats.multi(redisGetSharesCommand).exec(function (error, results) {
+      if (error) {
+        logger.error(logSystem, logComponent,
+          'Could not get blocks from redis ' + JSON.stringify(
+            error));
+        cback(true);
+        return;
+      }
+      // Processing redis results
+      for (var itera = 0; itera < poolCounter; itera++) {
+        for (var res in results[itera + 0]) { // Valid Shares cycle
+          _this.statWorkerFinal.worker[res]['validShares'] = results[itera + 0][res];
+        }
+        for (res in results[itera + 1]) { // Invalid Shares cycle
+          _this.statWorkerFinal.worker[res]['invalidShares'] = results[itera + 1][res];
+        }
+      }
+      cback(_this.statWorkerFinal);
+    });
+    cback(_this.statWorkerFinal);
+  };
   function getWorkerStats (address) {
     address = address.split('.')[0];
     if (address.length > 0 && address.startsWith('t')) {
