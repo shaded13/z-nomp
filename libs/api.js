@@ -111,7 +111,7 @@ module.exports = function (logger, portalConfig, poolConfigs) {
           res.end(JSON.stringify(statWorkerFinal));
         });
 
-        return;
+        break;
       case 'live_stats':
         res.writeHead(200, {
           'Content-Type': 'text/event-stream',
