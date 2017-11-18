@@ -174,7 +174,7 @@ module.exports = function (logger, portalConfig, poolConfigs) {
           _this.statWorkerFinal.worker[res]['invalidShares'] = results[itera + 1][res];
         }
       }
-      logger.error(logSystem, logComponent,
+      logger.error(logSystem, 'RedisError',
         'Getting workersFinal: '+JSON.stringify(_this.statWorkerFinal));
       cback(_this.statWorkerFinal);
     });
