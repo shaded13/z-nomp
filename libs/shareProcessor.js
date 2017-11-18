@@ -25,7 +25,7 @@ module.exports = function(logger, poolConfig){
     var logSystem = 'Pool';
     var logComponent = coin;
     var logSubCat = 'Thread ' + (parseInt(forkId) + 1);
-    
+
     var connection = redis.createClient(redisConfig.port, redisConfig.host);
     if (redisConfig.password) {
         connection.auth(redisConfig.password);
@@ -73,8 +73,13 @@ module.exports = function(logger, poolConfig){
         if (isValidShare) {
             redisCommands.push(['hincrbyfloat', coin + ':shares:roundCurrent', shareData.worker, shareData.difficulty]);
             redisCommands.push(['hincrby', coin + ':stats', 'validShares', 1]);
+            var miner = shareData.worker.split(".")[1];
+            redisCommands.push(['hincrby', coin + ':PermanentWorker:validShares', miner, 1]); //stats for new API
         } else {
             redisCommands.push(['hincrby', coin + ':stats', 'invalidShares', 1]);
+            var miner = shareData.worker.split(".")[1];
+            redisCommands.push(['hincrby', coin + ':PermanentWorker:invalidShares', miner, 1]); //stats for new API
+        }
         }
 
         /* Stores share diff, worker, and unique value with a score that is the timestamp. Unique value ensures it
