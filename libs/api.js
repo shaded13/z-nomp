@@ -121,6 +121,52 @@ module.exports = function (logger, portalConfig, poolConfigs) {
           delete _this.liveStatConnections[uid];
         });
         return;
+      case 'keepalive_worker':
+        res.header('Content-Type', 'application/json');
+        if (req.url.indexOf('?') > 0) {
+          var urlParms = req.url.split('?');
+          if (urlParms.length > 0) {
+            // var history = {}
+            // var workers = {}
+            var address = urlParms[1] || null;
+            // res.end(portalStats.getWorkerStats(address))
+            if (address != null && address.length > 0) {
+              // make sure it is just the miners address
+              address = address.split('.')[0];
+              portalStats.getWorkersKeepaliveByAddress(address, function (
+                miners) {
+                var result = [];
+                for (var miner in miners) {
+                  if ((miners[miner] - Date.now()) < -600000 && (miners[miner] - Date.now() > -86400000)) {
+                    result.push({
+                      name: miner,
+                      lastSubmitted: Math.floor(miners[miner] / 1000),
+                      lastSubmittedHR: (new Date(parseInt(miners[miner]))).toUTCString()
+                    // amount: payments[timeMark] // Math.floor(Date.now() / 1000)
+                    });
+                  }
+                }
+                res.end(JSON.stringify({
+                  miner: address,
+                  workersLastShareTime: result
+                }));
+              });
+            } else {
+              res.end(JSON.stringify({
+                result: 'error'
+              }));
+            }
+          } else {
+            res.end(JSON.stringify({
+              result: 'error'
+            }));
+          }
+        } else {
+          res.end(JSON.stringify({
+            result: 'error'
+          }));
+        }
+        return;
       default:
         next();
     }

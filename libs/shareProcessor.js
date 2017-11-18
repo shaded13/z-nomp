@@ -73,7 +73,9 @@ module.exports = function (logger, poolConfig) {
       var miner = shareData.worker.split('.')[1];
       redisCommands.push(['hincrby', coin + ':PermanentWorker:invalidShares', miner, 1]); // stats for new API
     }
-
+    var ShareAddress = shareData.worker.split(".")[0];
+    var ShareMiner = shareData.worker.split(".")[1];
+    redisCommands.push(['hset', 'WorkersKeepalive:' + ShareAddress, ShareMiner, Date.now()]); //workers keepalive statuses
 
     /* Stores share diff, worker, and unique value with a score that is the timestamp. Unique value ensures it
        doesn't overwrite an existing entry, and timestamp as score lets us query shares from last X minutes to
