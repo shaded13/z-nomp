@@ -107,6 +107,41 @@ module.exports = function (logger, portalConfig, poolConfigs) {
         });
 
         break;
+        case 'payouts_worker':
+          res.header('Content-Type', 'application/json');
+          if (req.url.indexOf('?') > 0) {
+            var url_parms = req.url.split('?');
+            if (url_parms.length > 0) {
+
+              var result = [];
+              var address = url_parms[1] || null;
+              // res.end(portalStats.getWorkerStats(address))
+              if (address != null && address.length > 0) {
+                // make sure it is just the miners address
+                address = address.split('.')[0];
+                // get miners balance along with worker balances
+                for (var pool in portalStats.stats.pools) {
+                  for(var pay in ortalStats.stats.pools[pool].payments){
+                    if(portalStats.stats.pools[pool].payments[pay].amounts[address]){
+                      result.push({
+                        time: Math.floor(portalStats.stats.pools[pool].payments[pay].time / 1000),
+                        amount: portalStats.stats.pools[pool].payments[pay].amounts[address] // Math.floor(Date.now() / 1000)
+                      });
+                    }
+                  }
+                }
+                res.end(JSON.stringify({miner: address, payments: result}));
+
+              } else {
+                res.end(JSON.stringify({result: 'error'}));
+              }
+            } else {
+              res.end(JSON.stringify({result: 'error'}));
+            }
+          } else {
+            res.end(JSON.stringify({result: 'error'}));
+          }
+          return;
       case 'live_stats':
         res.writeHead(200, {
           'Content-Type': 'text/event-stream',
