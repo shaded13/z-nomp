@@ -130,6 +130,7 @@ module.exports = function (logger, portalConfig, poolConfigs) {
                     }
                   }
                 }
+                
                 res.end(JSON.stringify({miner: address, payments: result}));
 
               } else {
