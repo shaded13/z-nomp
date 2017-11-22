@@ -180,10 +180,14 @@ module.exports = function (logger, portalConfig, poolConfigs) {
       // Processing redis results
       for (var itera = 0; itera < poolCounter; itera++) {
         for (var res in results[itera + 0]) { // Valid Shares cycle
-          _this.statWorkerFinal.worker[res]['validShares'] = results[itera + 0][res];
+          if (_this.statWorkerFinal.worker[res]) {
+            _this.statWorkerFinal.worker[res]['validShares'] = results[itera + 0][res];
+          }
         }
         for (res in results[itera + 1]) { // Invalid Shares cycle
-          _this.statWorkerFinal.worker[res]['invalidShares'] = results[itera + 1][res];
+          if (_this.statWorkerFinal.worker[res]) {
+            _this.statWorkerFinal.worker[res]['invalidShares'] = results[itera + 1][res];
+          }
         }
       }
       logger.error(logSystem, 'RedisError',
